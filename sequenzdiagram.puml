@@ -1,0 +1,66 @@
+@startuml Sequenz Empfang StorageFontName
+
+actor "stream\nauthor"      as saut 
+
+participant streamsource as ssrc 
+
+control nginx            
+control kmep 
+
+participant ffmpeg       as ffm  
+collections filesystem   as fs 
+
+
+database metadata        as md 
+
+
+== Prepare a Stream == 
+
+saut -> kmep : create stream meta data
+kmep -> md : save meta data stream(\n {\n  'id':'<uuid>',\n  'name':'<name>,'\n  '...':'<...>'\n})
+kmep --> saut : display stream.id
+
+saut -> ssrc : configure streamsource using stream.id
+
+== Record Stream ==
+
+ssrc -> ssrc : start streaming
+activate ssrc
+
+
+ssrc -> nginx : rtmp://<ip>/live/<stream.id>
+nginx -> nginx : listen on\nport 1935
+
+nginx -> ffm : exec ffmpeg\n   -i rtmp://<ip>/live/<stream.id>\n   -c copy /../<stream.id>.flv;
+
+ffm -> fs : store <stream.id>.pid 
+
+loop until stream ends 
+  ffm -> ffm : read and write stream
+  ffm -> fs : continuously store video in /../<stream.id>.flv
+  ffm -> fs : continuously store video in /../<stream.id>.ts
+end loop 
+
+nginx -> fs : start hls \nhls_path /../tmp/hls;\nhls_fragment 5s; \na sequence of <stream.id>-#.ts files is saved and\nserved via a container <stream.id>.m3u8 file
+
+
+
+
+
+== Preview Stream ==
+
+saut -> kmep : request incoming\nstream preview
+kmep -> fs : <source src="http://<ip>/hls/<stream.id>.m3u8" type="application/x-mpegURL">
+fs --> kmep : 5s delayed video data
+saut <- kmep : display <stream.id>.m3u8\nin browser as live preview
+
+deactivate ssrc 
+
+== Process Stream ==
+saut -> kmep : move recorded stream to Multimedia Manager
+kmep -> ffm : invoke ffmpeg to fetch flv,\nconvert to mp4\nand copy it to its final position
+ffm -> fs : get <stream.id>.flv
+ffm <-- fs : return <stream.id>.flv
+ffm -> ffm : convert <stream.id>.flv\nto <stream.id>.mp4
+
+@enduml

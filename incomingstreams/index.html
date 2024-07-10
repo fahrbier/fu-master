@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Stream Holger</title>
+    <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/7.10.2/video.js"></script>
+</head>
+<body>
+    <video-js id="my-video" class="vjs-default-skin" controls preload="auto" width="640" height="264" data-setup='{}'>
+        <source src="http://192.168.1.44:8080/hls/holger.m3u8" type="application/x-mpegURL">
+    </video-js>
+    <script>
+        var player = videojs('my-video');
+        player.play();
+    </script>
+</body>
+</html>

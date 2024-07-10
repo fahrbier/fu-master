@@ -1,0 +1,17 @@
+@startuml
+
+start
+:Recording- and Stream Manager;
+:Create New Event;
+:Edit Event Schedule;
+
+if (Recording or Stream?) then (Recording)
+  :show record button;
+  :New Recording;
+else (Stream)
+  :show await stream button;
+  :New Stream;
+endif
+
+stop
+@enduml
